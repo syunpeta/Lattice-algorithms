@@ -1,5 +1,5 @@
 using LinearAlgebra
-function GSO(B::Matrix{Int64}, N::Int64)::Tuple{Matrix{Float64},Matrix{Float64}}
+function GSO(B, N::Int64)::Tuple{Matrix{Float64},Matrix{Float64}}
     B_p = zeros(Float64,size(B))
     mu = zeros(Float64,(N,N))
     for i in 1:N

@@ -18,7 +18,7 @@ function GSOUp_LLL(mu::Matrix{Float64},norm_Bp::Array{Float64},k::Int64,N::Int64
     return mu,norm_Bp
 end
     
-function LLL(B::Matrix{Int64},delta::Float64)
+function LLL(B::Matrix{Int64},delta::Float64)::Matrix{Int64}
     N,_ = size(B)
     B_p,mu = GSO(B,N)
     norm_Bp = zeros(Float64,N)
@@ -39,5 +39,6 @@ function LLL(B::Matrix{Int64},delta::Float64)
             k = max(k-1,2)
         end
     end
-    return B,mu,norm_Bp
+    return B
 end
+

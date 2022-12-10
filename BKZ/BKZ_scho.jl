@@ -2,7 +2,17 @@ include("utils.jl")
 include("LLL.jl")
 include("ENUM_block.jl")
 include("MLLL.jl")
+include("ENUM.jl")
 using LinearAlgebra
+
+function pi_norm_2(v::Array{Int64},BB::Matrix{Float64},k::Int64)
+    N,__ = size(BB)
+    pi = zeros(Float64,N)
+    for i in k:N
+        pi += (v⋅BB[i,:]/norm(BB[i,:])^2)*BB[i,:]
+    end
+    return norm(pi)^2
+end
 
 function BKZ(B::Matrix{Int64},beta::Int64,delta::Float64)
     N,_ = size(B)
@@ -15,27 +25,31 @@ function BKZ(B::Matrix{Int64},beta::Int64,delta::Float64)
 
     z = 0
     k = 0
-    
+    R = 0.99*BB_norm[1]
     while z < (N-1)
-        k = mod(k+1,N-1)
+        k = mod(k+1,N-1)+1
         l = min(k+beta-1,N)
         h = min(l+1,N)
-        R = 0.99*BB_norm[k]
-        println("k,l,h,z,R",k,l,h,z,R)
 
-        for i in 1:32
-            print("[")
-            for j in 1:32
-                print(string(B[i,j]) ,",")
+        println("k,l,h,z,R",k,l,h,z,R)
+        mu_kl = zeros(Float64,k-l+1,k-l+1)
+        BB_norm_kl = zeros(Float64,k-l+1)
+        for i in k:l
+            for j in k:l
+                mu_kl[i-k+1,j-k+1] = mu_kl[i,j]
             end
-            print("],")
+            BB_norm_kl[i-k+1] = BB_norm[i]
         end
 
-        v = Enumeration(B,R,k,l)
-        println("v",v)
-        if !iszero(v)
+        v1 = ENUM(mu_kl,BB_norm_kl,R)
+        v = zeros(Int64,N)
+        for i in k:l
+            v += B[i,:]*v1[i-k+1]
+        end
+        println(v)
+        if BB_norm[k] > pi_norm_2(v,BB,k)
             z =0
-            C = zeros(Int64,h+1,N)
+            C = zeros(Int64,h,N)
             for i in 1:k
                 C[i,:] = B[i,:]
             end

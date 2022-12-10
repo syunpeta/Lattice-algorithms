@@ -8,17 +8,7 @@ function return_r(k::Int64,r0::Int64,r::Array{Int64})
     end
 end
         
-function ENUM(B::Matrix{Int64})
-    N,_ = size(B)
-    B_p,mu =GSO(B,N) 
-    norm_Bp = zeros(Float64,N)
-    for i in 1:N
-        norm_Bp[i] = norm(B_p[i,:])^2
-    end
-    
-    ##R設定
-    R = 0.99*norm_Bp[1]
-    ##
+function ENUM(mu::Matrix{Float64},GS::Array{Float64},R::Float64)
     
     sigma = zeros(Float64,(N+1,N))
     r = [i for i in 1:N]
@@ -31,7 +21,7 @@ function ENUM(B::Matrix{Int64})
     last_nonzero = 1
     k = 1
     while true
-        rho[k] = rho[k+1] + ((v[k] - c[k])^2) * norm_Bp[k]
+        rho[k] = rho[k+1] + ((v[k] - c[k])^2) * GS[k]
         if rho[k] <= R
             if k == 1
                 return v
@@ -39,7 +29,7 @@ function ENUM(B::Matrix{Int64})
                 k-=1
                 ##r
                 if k== 1
-                    r0 = max(r0,r[k])
+                    r0 = max(r0,r[1])
                 else
                     r[k-1] = max(r[k-1],r[k])
                 end
