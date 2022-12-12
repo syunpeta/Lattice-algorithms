@@ -32,38 +32,41 @@ function BKZ(B::Matrix{Int64},beta::Int64,delta::Float64)
         h = min(l+1,N)
 
         println("k,l,h,z,R",k,l,h,z,R)
-        mu_kl = zeros(Float64,k-l+1,k-l+1)
-        BB_norm_kl = zeros(Float64,k-l+1)
+        mu_kl = zeros(Float64,l-k+1,l-k+1)
+        BB_norm_kl = zeros(Float64,l-k+1)
         for i in k:l
             for j in k:l
-                mu_kl[i-k+1,j-k+1] = mu_kl[i,j]
+                mu_kl[i-k+1,j-k+1] = mu[i,j]
             end
             BB_norm_kl[i-k+1] = BB_norm[i]
         end
 
         v1 = ENUM(mu_kl,BB_norm_kl,R)
+        println(v1)
         v = zeros(Int64,N)
-        for i in k:l
-            v += B[i,:]*v1[i-k+1]
+        if v1!=false
+            for i in k:l
+                v += B[i,:]*v1[i-k+1]
+            end
         end
+
         println(v)
         if BB_norm[k] > pi_norm_2(v,BB,k)
             z =0
             C = zeros(Int64,h,N)
-            for i in 1:k
+            for i in 1:k-1
                 C[i,:] = B[i,:]
             end
             print("A")
-            C[k+1,:] = v
-            for i in (k+2):(h+1)
-                C[i,:] = B[i-1,:]
+            C[k,:] = v
+            for i in (k+1):(h)
+                C[i,:] = B[i,:]
             end
             print("B")
             #show(stdout, "text/plain", C)
             C= MLLL(C,delta)
-            println(C)
-            for i in 2:(h+1)
-                B[i-1,:] = C[i,:]
+            for i in 1:h
+                B[i,:] = C[i,:]
             end
             print("C")
             BB ,mu = GSO(B,N)

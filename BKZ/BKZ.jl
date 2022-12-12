@@ -1,6 +1,6 @@
 include("utils.jl")
 include("LLL.jl")
-include("ENUM_block.jl")
+include("ENUM.jl")
 include("MLLL.jl")
 using LinearAlgebra
 
@@ -17,41 +17,45 @@ function BKZ(B::Matrix{Int64},beta::Int64,delta::Float64)
     k = 0
     
     while z < (N-1)
-        k = mod(k+1,N-1)
+        k = mod(k+1,N-1)+1
         l = min(k+beta-1,N)
         h = min(l+1,N)
         R = 0.99*BB_norm[k]
         println("k,l,h,z,R",k,l,h,z,R)
 
-        for i in 1:32
-            print("[")
-            for j in 1:32
-                print(string(B[i,j]) ,",")
+        #μ[k,l],Bk...Bl
+        mu_kl = zeros(Float64,l-k+1,l-k+1)
+        BB_norm_kl = zeros(Float64,l-k+1)
+        for i in k:l
+            for j in k:l
+                mu_kl[i-k+1,j-k+1] = mu[i,j]
             end
-            print("],")
+            BB_norm_kl[i-k+1] = BB_norm[i]
         end
 
-        v = Enumeration(B,R,k,l)
-        println("v",v)
+        v1 = ENUM(mu_kl,BB_norm_kl,R)
+        v = zeros(Int64,N)
+        if !iszero(v1)
+            for i in k:l
+                v += B[i,:]*v1[i-k+1]
+            end
+            println("v",v)
+        end
+
         if !iszero(v)
             z =0
             C = zeros(Int64,h+1,N)
-            for i in 1:k
+            for i in 1:k-1
                 C[i,:] = B[i,:]
             end
-            print("A")
-            C[k+1,:] = v
-            for i in (k+2):(h+1)
+            C[k,:] = v
+            for i in (k+1):(h+1)
                 C[i,:] = B[i-1,:]
             end
-            print("B")
-            #show(stdout, "text/plain", C)
             C= MLLL(C,delta)
-            println(C)
-            for i in 2:(h+1)
-                B[i-1,:] = C[i,:]
+            for i in 1:h
+                B[i,:] = C[i,:]
             end
-            print("C")
             BB ,mu = GSO(B,N)
             BB_norm = zeros(Float64,N)
             for i in 1:N

@@ -9,6 +9,7 @@ function return_r(k::Int64,r0::Int64,r::Array{Int64})
 end
         
 function ENUM(mu::Matrix{Float64},GS::Array{Float64},R::Float64)
+    N,_ = size(mu)
     
     sigma = zeros(Float64,(N+1,N))
     r = [i for i in 1:N]
