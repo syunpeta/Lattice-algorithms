@@ -2,6 +2,21 @@ include("LLL.jl")
 include("utils.jl")
 using LinearAlgebra
 
+function GS_UP_l(BB,mu,GS,l,N)
+    GS[1,:] = BB[1,:]
+    for i in 2:l
+        tmp = zeros(Float64,N)
+        for j in 1:i-1
+            tmp += mu[i,j]*GS[j,:]
+        end
+        GS[i,:] = BB[i,:] - tmp
+    end
+    return GS
+end
+
+
+
+
 function  PotLLL(BB::Matrix{Int64},delta::Float64)
     N,_ = size(BB)
     BB = LLL(BB,delta)
@@ -10,9 +25,9 @@ function  PotLLL(BB::Matrix{Int64},delta::Float64)
 
     while l <= N
         for j in l-1:-1:1
-            part_Size_reduce(BB,mu,l,j)
+            BB,mu = part_Size_reduce(BB,mu,l,j)
         end
-        GS,mu = GSO(BB,N)
+        GS= GS_UP_l(BB,mu,GS,l,N)
         P = 1
         Pmin = 1
         k = 1
@@ -24,7 +39,6 @@ function  PotLLL(BB::Matrix{Int64},delta::Float64)
             end
             
             P = P*((norm(GS[l,:])^2  + sum_tmp)/norm(GS[j,:])^2)
-            println(P)
             if P < Pmin
                 k = j
                 Pmin = P
@@ -39,6 +53,7 @@ function  PotLLL(BB::Matrix{Int64},delta::Float64)
             BB[k,:] = v
 
             GS,mu = GSO(BB,N)
+            l=k
         else
             l += 1
         end
@@ -48,9 +63,3 @@ function  PotLLL(BB::Matrix{Int64},delta::Float64)
     
 end
 
-BB = [63 -14 -1 84 61;74 -20 23 -32 -52;93 -46 -19 0 -63;93 11 13 60 52;33 -93 12 57 -2]
-PotLLL(BB,0.99)
-
-BB = [63 -14 -1 84 61;74 -20 23 -32 -52;93 -46 -19 0 -63;93 11 13 60 52;33 -93 12 57 -2]
-PotLLL(BB,0.99)
-LLL(BB,0.99)
